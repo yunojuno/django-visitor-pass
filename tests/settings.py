@@ -19,7 +19,8 @@ INSTALLED_APPS = (
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
-    "my_app",
+    "visitors",
+    "tests",
 )
 
 MIDDLEWARE = [
@@ -29,6 +30,9 @@ MIDDLEWARE = [
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
+    "visitors.middleware.VisitorRequestMiddleware",
+    "visitors.middleware.VisitorSessionMiddleware",
+    "visitors.middleware.VisitorDebugMiddleware",
 ]
 
 PROJECT_DIR = path.abspath(path.join(path.dirname(__file__)))

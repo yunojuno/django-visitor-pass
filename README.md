@@ -42,11 +42,11 @@ The tests themselves use `pytest` as the test runner. If you have installed the 
 $ poetry run pytest
 ```
 
-or 
+or
 
 ```
 $ poetry shell
-(my_app) $ pytest
+(visitors) $ pytest
 ```
 
 The full suite is controlled by `tox`, which contains a set of environments that will format (`fmt`), lint, and test against all support Python + Django version combinations.
