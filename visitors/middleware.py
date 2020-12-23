@@ -23,11 +23,11 @@ class VisitorRequestMiddleware:
     def __call__(self, request: HttpRequest) -> HttpResponse:
         request.visitor = None
         request.user.is_visitor = False
-        visitor_token = request.GET.get(VISITOR_QUERYSTRING_KEY)
-        if not visitor_token:
+        visitor_uuid = request.GET.get(VISITOR_QUERYSTRING_KEY)
+        if not visitor_uuid:
             return self.get_response(request)
         try:
-            visitor = Visitor.objects.get(uuid=visitor_token)
+            visitor = Visitor.objects.get(uuid=visitor_uuid)
         except Visitor.DoesNotExist:
             return self.get_response(request)
         else:
@@ -62,7 +62,7 @@ class VisitorSessionMiddleware:
         # start with is_visitor=False and pick up the visitor info from
         # the session.
         if request.visitor:
-            request.session[VISITOR_SESSION_KEY] = str(request.visitor.uuid)
+            request.session[VISITOR_SESSION_KEY] = request.visitor.session_data
             return self.get_response(request)
 
         # We don't have a visitor object, but there may be one in the session
@@ -71,9 +71,6 @@ class VisitorSessionMiddleware:
 
         try:
             visitor = Visitor.objects.get(uuid=visitor_uuid)
-        except KeyError:
-            del request.session[VISITOR_SESSION_KEY]
-            return self.get_response(request)
         except Visitor.DoesNotExist:
             del request.session[VISITOR_SESSION_KEY]
             return self.get_response(request)

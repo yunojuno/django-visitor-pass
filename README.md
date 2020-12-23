@@ -1,71 +1,131 @@
-# Poetry Template
+# Django Visitors
 
-Django app template, using `poetry-python` as dependency manager.
+Django app for managing temporary session-based users.
 
-This project is a template that can be cloned and re-used for redistributable apps.
+### Background
 
-It includes the following:
+This package has been extracted out of `django-request-token` as a specific use
+case - that of temporary site "visitors". It enables a type of ephemeral user
+who is neither anonymous nor authenticated, but somewhere in between - known for
+the duration of their session.
 
-* `poetry` for dependency management
-* `isort`, `black`, `pylint` and `flake8` linting
-* `pre-commit` to run linting
-* `mypy` for type checking
-* `tox` and `travis` for builds and CI
+### Motivation
 
-There are default config files for the linting and mypy.
+We've been using `django-request-token` for a while, and have issued over
+100,000 tokens. A recent analysis showed two main use cases - single-use "magic
+links" for logging people in, and a more involved case where we invite
+unregistered users on to the platform to perform some action - providing a
+reference perhaps, or collaborating on something with (registered) users. The
+former we have extracted out into `django-magic-links` - and this package
+addresses the latter.
 
-## Principles
+### What is a "visitor"?
 
-The motivation for this project is to provide a consistent set of standards across all YunoJuno public Python/Django projects. The principles we want to encourage are:
+In the standard Django model you have the concept of an `AnonymousUser`, and an
+authenticated `User` - someone who has logged in. We have a third, intermediate,
+type of user - which we have historically referred to as a "Temp User", which is
+someone we know _of_, but who has not yet registered.
 
-* Simple for developers to get up-and-running:
-    * Install all dev dependencies in an isolated environment
-    * Run complete tox suite locally
-* Consistent style:
-    * Common formatting with `isort` and `black`
-    * Common patterns with `pylint` and `flake8`
-* Full type hinting
+The canonical example of this is leaving a reference: user A on the site invites
+user B to leave a reference for them. They (A) give us B's name and email, we
+invite them to click on a link and fill out a form. That's it. We store their
+name and email so that we can contact them, but it's ephemeral - we don't need
+it, and we don't use it. Storing this data in the User table made sense (as it
+has name and email fields), but it led to a lot of `user_type=TEMP` munging to
+determine who is a 'real' user on the site.
 
-## Versioning
+What we really want is to 'stash' this information somewhere outside of the auth
+system, and to enable these temp users to have restricted access to specific
+areas of the application, for a limited period, after which we can forget about
+them and clear out the data.
 
-It's 2020, Python2 is officially deprecated, and we run our core platform on recent releases (Python 3.8 and Django 2.2 at the time of writing). Taking out lead from Django itself, we only support Python 3.8/7/6 and Django 2.2/3.0. As new versions arrive we will deprecate older versions at the point at which maintaining becomes a burden. Typically this is when we start to have to incorporate conditional imports into modules. When an older version of Python / Django is deprecated, the last supported version will be tagged as such. In the unlikely event that any bug fixes need to be applied to an old version, they will be done on a branch off the last known good version. They will not be released to PyPI.
+We call these users "visitors".
 
-## Tests
+### Use Case - request a reference
 
-#### Tests package
-The package tests themselves are _outside_ of the main library code, in a package that is itself a Django app (it contains `models`, `settings`, and any other artifacts required to run the tests (e.g. `urls`).) Where appropriate, this test app may be runnable as a Django project - so that developers can spin up the test app and see what admin screens look like, test migrations, etc.
+Fred is a registered user on the site, and would like a reference from Ginger,
+his dance partner.
 
-#### Running tests
-The tests themselves use `pytest` as the test runner. If you have installed the `poetry` evironment, you can run them thus:
-
-```
-$ poetry run pytest
-```
-
-or
-
-```
-$ poetry shell
-(visitors) $ pytest
-```
-
-The full suite is controlled by `tox`, which contains a set of environments that will format (`fmt`), lint, and test against all support Python + Django version combinations.
+1. Fred fills out the reference request form:
 
 ```
-$ tox
-...
-______________________ summary __________________________
-  fmt: commands succeeded
-  lint: commands succeeded
-  mypy: commands succeeded
-  py36-django22: commands succeeded
-  py36-django30: commands succeeded
-  py37-django22: commands succeeded
-  py37-django30: commands succeeded
-  py38-django22: commands succeeded
-  py38-django30: commands succeeded
+   Name: Ginger
+   Email: ginger@[...].com
+   Message: ...
+   Scope: REFERENCE_REQUEST [hidden field]
 ```
 
-#### CI
+2. We save this information, and generate a unique link which we send to Ginger,
+   along with the message.
 
-There is a `.travis.yml` file that can be used as a baseline to run all of the tests on Travis.
+3. Ginger clicks on the link, at which point we recognise that this is someone
+   we know about - a "visitor" - but who is in all other respects an
+   `AnonymousUser`.
+
+4. We stash the visitor info in the standard session object - so that even
+   though Ginger is not authenticated, we know who she is, and more importantly
+   we know why she's here (REFERENCE_REQUEST).
+
+5. Ginger submits the reference - which may be a multi-step process, involving
+   GETs and POSTs, all of which are guarded by a decorator that restricts access
+   to visitors with the appropriate Scope (just like `django-request-token`).
+
+6. At the final step we can (optionally) choose to clear the session info
+   immediately, effectively removing all further access.
+
+### Implementation
+
+This code has been extracted out of `django-request-token` and simplified. It
+stores the visitor data in the `Visitor` model, and on each successful first
+request (where the token is 'processed' and the session filled) we record a
+`VisitorLog` record. This includes HTTP request info (session_key, referer,
+client IP, user-agent). This information is for analytics only - for instance
+determining whether links are being shared.
+
+### Configuration
+
+#### Django Settings
+
+1. Add `visitors` to `INSTALLED_APPS`
+1. Add `visitors.middleware.VisitorRequestMiddleware` to `MIDDLEWARE`
+1. Add `visitors.middleware.VisitorSessionMiddleware` to `MIDDLEWARE`
+
+#### Environment Settings
+
+* `VISITOR_SESSION_KEY`: session key used to stash visitor info
+  ("visitor:session")
+
+* `VISITOR_QUERYSTRING_KEY`: querystring param used on tokenised links ("vid")
+
+### Usage
+
+Once you have the package configured, you should use the `allow_visitor`
+decorator to protect views that you want to restricted to visitors only. The
+decorator requires a `scope` kwarg, which must match the `Visitor.scope` value
+set when the `Visitor` object is created.
+
+```python
+@allow_visitor(scope="foo")
+def protected_view(request):
+   pass
+```
+
+By default the decorator will allow visitors with the correct scope, deny
+anonymous users, and also allow authenticated users. If you want more control
+over the access, you can pass a callable as the `bypass` param:
+
+```python
+# prevent authenticated users from bypassing the check
+@allow_visitor(scope="foo", bypass=lambda u: False)
+def deny_authenticated_users(request):
+   pass
+```
+
+If you don't care about the scope (you should), you can use `"*"` to allow all
+visitors access:
+
+```python
+@allow_visitor(scope="*")
+def allow_all_scopes(request):
+   pass
+```

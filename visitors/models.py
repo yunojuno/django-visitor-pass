@@ -1,12 +1,15 @@
 from __future__ import annotations
 
 import uuid
+from urllib.parse import parse_qs, urlencode, urlparse, urlunparse
 
 from django.db import models
 from django.db.models.deletion import CASCADE
 from django.http.request import HttpRequest
 from django.utils.timezone import now as tz_now
 from django.utils.translation import gettext_lazy as _lazy
+
+from .settings import VISITOR_QUERYSTRING_KEY
 
 
 class Visitor(models.Model):
@@ -36,6 +39,36 @@ class Visitor(models.Model):
     @property
     def full_name(self) -> str:
         return f"{self.first_name} {self.last_name}"
+
+    @property
+    def session_data(self) -> str:
+        return str(self.uuid)
+
+    def serialize(self) -> dict:
+        """
+        Return JSON-serializable representation.
+
+        Useful for template context and session data.
+
+        """
+        return {
+            "uuid": str(self.uuid),
+            "first_name": self.first_name,
+            "last_name": self.last_name,
+            "full_name": self.full_name,
+            "email": self.email,
+            "scope": self.scope,
+            "context": self.context,
+        }
+
+    def tokenise(self, url: str) -> str:
+        """Combine url with querystring token."""
+        # from https://stackoverflow.com/a/2506477/45698
+        parts = list(urlparse(url))
+        query = parse_qs(parts[4])
+        query.update({VISITOR_QUERYSTRING_KEY: self.uuid})
+        parts[4] = urlencode(query)
+        return urlunparse(parts)
 
 
 class VisitorLogManager(models.Manager):
