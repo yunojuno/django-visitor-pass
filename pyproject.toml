@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "django-visitors"
-version = "0.1.0"
+version = "0.1.1"
 description = "Django support for 'visitors' - who are neither anonymous nor authenticated."
 license = "MIT"
 authors = ["YunoJuno <code@yunojuno.com>"]
