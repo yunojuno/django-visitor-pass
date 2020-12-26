@@ -1,0 +1,24 @@
+<html>
+    <body>
+        <h1>Demo App</h1>
+        <p>Hello, World!</p>
+        {% if request.user.is_visitor %}
+        <p>Congratulations - you are a visitor</p>
+        {% endif %}
+        <p>Click this link to view this page via the  
+            <a href="{% url 'demo:visitor_link' %}">visitor link</a>.
+        </p>
+        <p>Click this link to create a new token
+            <a href="{% url 'demo:create_visitor_link' %}">visitor link</a>.
+        </p>
+        {% if visitor_uuid %}
+        <p>
+            Click here to
+            <a href="/?vid={{ visitor_uuid }}">Refresh</a>
+        </p>
+        {% endif %}
+        <p>
+            Click here to <a href="{% url 'demo:clear_session_data' %}">clear session data</a>.
+        </p>
+    </body>
+</html>
