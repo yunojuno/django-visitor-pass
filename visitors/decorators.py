@@ -4,14 +4,35 @@ import functools
 import logging
 from typing import Any, Callable, Optional
 
+from django.conf import settings
+from django.core.exceptions import PermissionDenied
 from django.http import HttpRequest, HttpResponse
-from django.http.response import HttpResponseForbidden
 from django.utils.translation import gettext as _
 
 logger = logging.getLogger(__name__)
 
 # universal scope - essentially unscoped access
 SCOPE_ANY = "*"
+
+
+def is_visitor(user: settings.AUTH_USER_MODEL) -> bool:
+    """Shortcut function for use with user_passes_test decorator."""
+    return user.is_visitor
+
+
+def is_staff(user: settings.AUTH_USER_MODEL) -> bool:
+    """Shortcut function for use with user_passes_test decorator."""
+    return user.is_staff
+
+
+def is_superuser(user: settings.AUTH_USER_MODEL) -> bool:
+    """Shortcut function for use with user_passes_test decorator."""
+    return user.is_superuser
+
+
+def is_authenticated(user: settings.AUTH_USER_MODEL) -> bool:
+    """Shortcut function for use with user_passes_test decorator."""
+    return user.is_authenticated
 
 
 def _get_request_arg(*args: Any) -> Optional[HttpRequest]:
@@ -22,10 +43,12 @@ def _get_request_arg(*args: Any) -> Optional[HttpRequest]:
     return None
 
 
-def allow_visitor(  # noqa: C901
+def check_visitor_scope(  # noqa: C901
     view_func: Optional[Callable] = None,
-    scope: str = "*",
-    bypass: Callable = lambda u: u.is_authenticated,
+    # scope must be a kwarg as view_func is one, but we want to disallow
+    # an empty str - so use as default and fail if not overwritten.
+    scope: str = "",
+    bypass_func: Optional[Callable[[HttpRequest], bool]] = None,
 ) -> Callable:
     """
     Decorate view functions that supports Visitor access.
@@ -33,28 +56,28 @@ def allow_visitor(  # noqa: C901
     The 'scope' param is mapped to the request.visitor.scope attribute - if
     the scope is SCOPE_ANY then this is ignored.
 
-    The 'bypass' param is a callable (lambda) that can be used to provide
-    exceptions to the scope. The default is to allow authenticated users
-    to bypass the restriction. To prevent this use `lambda u: False`.
-
-    Errors are trapped and returned as HttpResponseForbidden responses, with
-    the original error as the `response.error` property.
-
-    For more details on decorators with optional args, see:
-    https://blogs.it.ox.ac.uk/inapickle/2012/01/05/python-decorators-with-optional-arguments/
+    The 'bypass_func' is a callable that can be used to provide exceptions
+    to the scope - e.g. allowing authenticate users, or staff, to bypass the
+    visitor restriction. Defaults to None (only visitors with appropriate
+    scope allowed).
 
     """
     if not scope:
         raise ValueError("Decorator scope cannot be empty.")
 
     if view_func is None:
-        return functools.partial(allow_visitor, scope=scope, bypass=bypass)
+        return functools.partial(
+            check_visitor_scope,
+            scope=scope,
+            bypass_func=bypass_func,
+        )
 
     @functools.wraps(view_func)
     def inner(*args: Any, **kwargs: Any) -> HttpResponse:
         # should never happen, but keeps mypy happy as it _could_
         if not view_func:
             raise ValueError("Callable (view_func) missing.")
+
         # HACK: if this is decorating a method, then the first arg will be
         # the object (self), and not the request. In order to make this work
         # with functions and methods we need to determine where the request
@@ -63,18 +86,23 @@ def allow_visitor(  # noqa: C901
         if not request:
             raise ValueError("Request argument missing.")
 
-        if bypass(request.user):
+        # Allow custom rules to bypass the visitor checks
+        if bypass_func and bypass_func(request):
             return view_func(*args, **kwargs)
 
+        # Do we have a visitor?
         if not request.user.is_visitor:
-            return HttpResponseForbidden(_("Visitor access denied"))
+            raise PermissionDenied(_("Visitor access denied"))
 
+        # Do they require a scope - if not, let them through.
         if scope == SCOPE_ANY:
             return view_func(*args, **kwargs)
 
+        # Does the visitor scope match the request scope?
         if request.visitor.scope == scope:
             return view_func(*args, **kwargs)
 
-        return HttpResponseForbidden(_("Invalid visitor scope"))
+        # We have a visitor with the wrong scope
+        raise PermissionDenied(_("Visitor access denied (invalid scope)."))
 
     return inner

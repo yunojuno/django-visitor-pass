@@ -8,8 +8,9 @@ from django.core.exceptions import MiddlewareNotUsed
 from django.http.request import HttpRequest
 from django.http.response import HttpResponse
 
+from . import session
 from .models import Visitor, VisitorLog
-from .settings import VISITOR_QUERYSTRING_KEY, VISITOR_SESSION_KEY
+from .settings import VISITOR_QUERYSTRING_KEY
 
 logger = logging.getLogger(__name__)
 
@@ -62,17 +63,17 @@ class VisitorSessionMiddleware:
         # start with is_visitor=False and pick up the visitor info from
         # the session.
         if request.visitor:
-            request.session[VISITOR_SESSION_KEY] = request.visitor.session_data
+            session.stash_visitor_uuid(request)
             return self.get_response(request)
 
         # We don't have a visitor object, but there may be one in the session
-        if not (visitor_uuid := request.session.get(VISITOR_SESSION_KEY)):
+        if not (visitor_uuid := session.get_visitor_uuid(request)):
             return self.get_response(request)
 
         try:
             visitor = Visitor.objects.get(uuid=visitor_uuid)
         except Visitor.DoesNotExist:
-            del request.session[VISITOR_SESSION_KEY]
+            session.clear_visitor_uuid(request)
             return self.get_response(request)
         else:
             request.visitor = visitor

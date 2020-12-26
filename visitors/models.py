@@ -76,7 +76,7 @@ class VisitorLogManager(models.Manager):
         """Extract values from HttpRequest and store locally."""
         return self.create(
             visitor=request.visitor,
-            session_key=request.session.session_key,
+            session_key=request.session.session_key or "",
             http_method=request.method,
             request_uri=request.path,
             query_string=request.META.get("QUERY_STRING", ""),
