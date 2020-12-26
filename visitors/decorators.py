@@ -43,7 +43,7 @@ def _get_request_arg(*args: Any) -> Optional[HttpRequest]:
     return None
 
 
-def check_visitor_scope(  # noqa: C901
+def user_is_visitor(  # noqa: C901
     view_func: Optional[Callable] = None,
     # scope must be a kwarg as view_func is one, but we want to disallow
     # an empty str - so use as default and fail if not overwritten.
@@ -67,7 +67,7 @@ def check_visitor_scope(  # noqa: C901
 
     if view_func is None:
         return functools.partial(
-            check_visitor_scope,
+            user_is_visitor,
             scope=scope,
             bypass_func=bypass_func,
         )

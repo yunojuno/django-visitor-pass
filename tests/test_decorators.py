@@ -8,7 +8,7 @@ from django.core.exceptions import PermissionDenied
 from django.http import HttpRequest, HttpResponse
 from django.test import RequestFactory
 
-from visitors.decorators import check_visitor_scope
+from visitors.decorators import user_is_visitor
 from visitors.models import Visitor
 
 
@@ -27,7 +27,7 @@ class TestDecorators:
     def test_no_access(self):
         request = self._request()
 
-        @check_visitor_scope(scope="foo")
+        @user_is_visitor(scope="foo")
         def view(request: HttpRequest) -> HttpResponse:
             return HttpResponse("OK")
 
@@ -38,7 +38,7 @@ class TestDecorators:
         visitor = Visitor.objects.create(email="fred@example.com", scope="foo")
         request = self._request(visitor=visitor)
 
-        @check_visitor_scope(scope="bar")
+        @user_is_visitor(scope="bar")
         def view(request: HttpRequest) -> HttpResponse:
             return HttpResponse("OK")
 
@@ -49,7 +49,7 @@ class TestDecorators:
         visitor = Visitor.objects.create(email="fred@example.com", scope="foo")
         request = self._request(visitor=visitor)
 
-        @check_visitor_scope(scope="foo")
+        @user_is_visitor(scope="foo")
         def view(request: HttpRequest) -> HttpResponse:
             return HttpResponse("OK")
 
@@ -61,7 +61,7 @@ class TestDecorators:
         visitor = Visitor.objects.create(email="fred@example.com", scope="foo")
         request = self._request(visitor=visitor)
 
-        @check_visitor_scope(scope="*")
+        @user_is_visitor(scope="*")
         def view(request: HttpRequest) -> HttpResponse:
             return HttpResponse("OK")
 
@@ -74,7 +74,7 @@ class TestDecorators:
         user = User(username="fred")
         request = self._request(user=user)
 
-        @check_visitor_scope(scope="foo", bypass_func=lambda r: True)
+        @user_is_visitor(scope="foo", bypass_func=lambda r: True)
         def view(request: HttpRequest) -> HttpResponse:
             return HttpResponse("OK")
 
@@ -86,7 +86,7 @@ class TestDecorators:
         user = User(username="fred")
         request = self._request(user=user)
 
-        @check_visitor_scope(scope="foo", bypass_func=lambda r: False)
+        @user_is_visitor(scope="foo", bypass_func=lambda r: False)
         def view(request: HttpRequest) -> HttpResponse:
             return HttpResponse("OK")
 

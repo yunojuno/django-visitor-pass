@@ -99,25 +99,25 @@ determining whether links are being shared.
 
 ### Usage
 
-Once you have the package configured, you should use the `allow_visitor`
+Once you have the package configured, you can use the `user_is_visitor`
 decorator to protect views that you want to restricted to visitors only. The
 decorator requires a `scope` kwarg, which must match the `Visitor.scope` value
 set when the `Visitor` object is created.
 
 ```python
-@allow_visitor(scope="foo")
+@user_is_visitor(scope="foo")
 def protected_view(request):
    pass
 ```
 
-By default the decorator will allow visitors with the correct scope, deny
-anonymous users, and also allow authenticated users. If you want more control
-over the access, you can pass a callable as the `bypass` param:
+By default the decorator will allow visitors with the correct scope only. If you
+want more control over the access, you can pass a callable as the `bypass_func`
+param:
 
 ```python
-# prevent authenticated users from bypassing the check
-@allow_visitor(scope="foo", bypass=lambda u: False)
-def deny_authenticated_users(request):
+# allow authenticated users as well as visitors
+@user_is_visitor(scope="foo", bypass_func=lambda r: r.user.is_staff)
+def allow_visitors_and_staff(request):
    pass
 ```
 
@@ -125,7 +125,22 @@ If you don't care about the scope (you should), you can use `"*"` to allow all
 visitors access:
 
 ```python
-@allow_visitor(scope="*")
+@user_is_visitor(scope="*")  # see also SCOPE_ANY
 def allow_all_scopes(request):
    pass
+```
+
+Alternatively, for more complex use cases, you can ignore the decorator and just
+inspect the request itself:
+
+```python
+def complicated_rules(request):
+   if request.user.is_visitor:
+      pass
+   elif is_national_holiday():
+      pass
+   elif is_sunny_day():
+      pass
+   else:
+      raise PermissionDenied
 ```
