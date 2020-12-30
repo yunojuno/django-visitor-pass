@@ -82,6 +82,38 @@ request (where the token is 'processed' and the session filled) we record a
 client IP, user-agent). This information is for analytics only - for instance
 determining whether links are being shared.
 
+The app works by adding some attributes to the `request` and `request.user`
+objects. The user has a boolean `user.is_visitor` property, and the request has
+a `request.visitor` property which is the relevant `Visitor` object.
+
+This is done via two bits of middleware, `VisitorRequestMiddleware` and
+`VisitSessionMiddleware`. 
+
+#### `VisitorRequestMiddleware`
+
+This middleware looks for a visitor token (uuid) on the incoming request
+querystring. If it finds a token, it will look up the `Visitor` object, add it
+to the request, and then set the `request.user.is_visitor` attribute. It sets
+the properties from the request, and has no interaction with the session. This
+happens in the second piece of middleware.
+
+#### `VisitorSessionMiddleware`
+
+This middleware must come after the `VisitorRequestMiddleware` (it will blow up
+if it can't access `request.visitor`). It has two responsibilities:
+
+1. If the request object has a visitor object on it, then it _must_ have been
+   set by the request middleware on the current request - so it's a new visitor,
+   and we immediately stash it in the `request.session`. 
+
+1. If `request.visitor` is None, then we don't have a _new_ visitor, but there
+   may be one already stashed in the `request.session`, in which case we want to
+   add it on the to the request.
+
+Note: splitting this in two seems over-complicated, but because we are moving
+values from request-into-session-into-request it's a lot simpler to run two
+completely separate passes.
+
 ### Configuration
 
 #### Django Settings
