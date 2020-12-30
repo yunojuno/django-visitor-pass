@@ -124,10 +124,11 @@ completely separate passes.
 
 #### Environment Settings
 
-* `VISITOR_SESSION_KEY`: session key used to stash visitor info
-  ("visitor:session")
+* `VISITOR_SESSION_KEY`: session key used to stash visitor info (defaut:
+  `visitor:session`)
 
-* `VISITOR_QUERYSTRING_KEY`: querystring param used on tokenised links ("vid")
+* `VISITOR_QUERYSTRING_KEY`: querystring param used on tokenised links (default:
+  `vuid`)
 
 ### Usage
 
