@@ -1,14 +1,14 @@
 [tool.poetry]
 name = "django-visitor-pass"
 version = "0.1.2"
-description = "Django app that enables session-backed 'visitors' (between anonymous and authenticated)."
+description = "Django app for managing temporary session-based users."
 license = "MIT"
 authors = ["YunoJuno <code@yunojuno.com>"]
 maintainers = ["YunoJuno <code@yunojuno.com>"]
 readme = "README.md"
-homepage = "https://github.com/yunojuno/django-visitors"
-repository = "https://github.com/yunojuno/django-visitors"
-documentation = "https://github.com/yunojuno/django-visitors"
+homepage = "https://github.com/yunojuno/django-visitor-pass"
+repository = "https://github.com/yunojuno/django-visitor-pass"
+documentation = "https://github.com/yunojuno/django-visitor-pass"
 classifiers = [
     "Development Status :: 4 - Beta",
     "Environment :: Web Environment",
