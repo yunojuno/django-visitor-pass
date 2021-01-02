@@ -10,8 +10,8 @@ TEST_UUID: str = "68201321-9dd2-4fb3-92b1-24367f38a7d6"
 @pytest.mark.parametrize(
     "url_in,url_out",
     (
-        ("google.com", f"google.com?vid={TEST_UUID}"),
-        ("google.com?vid=123", f"google.com?vid={TEST_UUID}"),
+        ("google.com", f"google.com?vuid={TEST_UUID}"),
+        ("google.com?vuid=123", f"google.com?vuid={TEST_UUID}"),
     ),
 )
 def test_visitor_tokenise(url_in, url_out):

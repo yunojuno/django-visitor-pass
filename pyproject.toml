@@ -1,7 +1,7 @@
 [tool.poetry]
-name = "django-visitors"
-version = "0.1.1"
-description = "Django support for 'visitors' - who are neither anonymous nor authenticated."
+name = "django-visitor-pass"
+version = "0.1.2"
+description = "Django app that enables session-backed 'visitors' (between anonymous and authenticated)."
 license = "MIT"
 authors = ["YunoJuno <code@yunojuno.com>"]
 maintainers = ["YunoJuno <code@yunojuno.com>"]

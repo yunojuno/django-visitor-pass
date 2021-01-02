@@ -1,4 +1,4 @@
-# Django Visitors
+# Django Visitor Pass
 
 Django app for managing temporary session-based users.
 

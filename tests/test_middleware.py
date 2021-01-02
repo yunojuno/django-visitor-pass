@@ -37,7 +37,7 @@ class TestVisitorRequestMiddleware(TestVisitorMiddlewareBase):
 
     @pytest.mark.django_db
     def test_token_does_not_exist(self):
-        request = self.request(f"/?vid={uuid.uuid4()}")
+        request = self.request(f"/?vuid={uuid.uuid4()}")
         middleware = VisitorRequestMiddleware(lambda r: r)
         middleware(request)
         assert not request.user.is_visitor
@@ -46,7 +46,7 @@ class TestVisitorRequestMiddleware(TestVisitorMiddlewareBase):
     @pytest.mark.django_db
     def test_valid_token(self):
         visitor = Visitor.objects.create(email="fred@example.com")
-        request = self.request(f"/?vid={visitor.uuid}")
+        request = self.request(f"/?vuid={visitor.uuid}")
         middleware = VisitorRequestMiddleware(lambda r: r)
         middleware(request)
         assert request.user.is_visitor
