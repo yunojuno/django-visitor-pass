@@ -32,7 +32,7 @@ class TestDecorators:
             return HttpResponse("OK")
 
         with pytest.raises(PermissionDenied):
-            response = view(request)
+            _ = view(request)
 
     def test_incorrect_scope(self):
         visitor = Visitor.objects.create(email="fred@example.com", scope="foo")
@@ -43,7 +43,7 @@ class TestDecorators:
             return HttpResponse("OK")
 
         with pytest.raises(PermissionDenied):
-            response = view(request)
+            _ = view(request)
 
     def test_correct_scope(self):
         visitor = Visitor.objects.create(email="fred@example.com", scope="foo")
@@ -91,4 +91,4 @@ class TestDecorators:
             return HttpResponse("OK")
 
         with pytest.raises(PermissionDenied):
-            response = view(request)
+            _ = view(request)

@@ -1,11 +1,13 @@
 from django.http.request import HttpRequest
 
-from visitors.settings import VISITOR_SESSION_KEY
+from visitors.settings import VISITOR_SESSION_EXPIRY, VISITOR_SESSION_KEY
 
 
 def stash_visitor_uuid(request: HttpRequest) -> None:
     """Store request visitor data in session."""
     request.session[VISITOR_SESSION_KEY] = request.visitor.session_data
+    if request.user.is_anonymous:
+        request.session.set_expiry(VISITOR_SESSION_EXPIRY)
 
 
 def get_visitor_uuid(request: HttpRequest) -> str:

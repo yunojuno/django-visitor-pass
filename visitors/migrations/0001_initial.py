@@ -46,5 +46,9 @@ class Migration(migrations.Migration):
                 ),
                 ("last_updated_at", models.DateTimeField(auto_now=True)),
             ],
+            options={
+                "verbose_name": "Visitor pass",
+                "verbose_name_plural": "Visitor passes",
+            },
         ),
     ]

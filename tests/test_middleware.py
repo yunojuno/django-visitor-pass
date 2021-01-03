@@ -1,12 +1,13 @@
 import uuid
 from typing import Optional
+from unittest import mock
 
 import pytest
 from django.contrib.auth.models import AnonymousUser, User
 from django.test import RequestFactory
 
 from visitors.middleware import VisitorRequestMiddleware, VisitorSessionMiddleware
-from visitors.models import Visitor
+from visitors.models import InvalidVisitorPass, Visitor
 from visitors.settings import VISITOR_SESSION_KEY
 
 
@@ -16,6 +17,9 @@ class Session(dict):
     @property
     def session_key(self):
         return "foobar"
+
+    def set_expiry(self, expiry: int) -> None:
+        self.expiry = expiry
 
 
 class TestVisitorMiddlewareBase:
@@ -44,9 +48,18 @@ class TestVisitorRequestMiddleware(TestVisitorMiddlewareBase):
         assert not request.visitor
 
     @pytest.mark.django_db
+    def test_token_is_invalid(self):
+        visitor = Visitor.objects.create(email="fred@example.com", is_active=False)
+        request = self.request(visitor.tokenise("/"))
+        middleware = VisitorRequestMiddleware(lambda r: r)
+        middleware(request)
+        assert not request.user.is_visitor
+        assert not request.visitor
+
+    @pytest.mark.django_db
     def test_valid_token(self):
         visitor = Visitor.objects.create(email="fred@example.com")
-        request = self.request(f"/?vuid={visitor.uuid}")
+        request = self.request(visitor.tokenise("/"))
         middleware = VisitorRequestMiddleware(lambda r: r)
         middleware(request)
         assert request.user.is_visitor

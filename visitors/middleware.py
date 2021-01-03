@@ -9,7 +9,7 @@ from django.http.request import HttpRequest
 from django.http.response import HttpResponse
 
 from . import session
-from .models import Visitor, VisitorLog
+from .models import InvalidVisitorPass, Visitor, VisitorLog
 from .settings import VISITOR_QUERYSTRING_KEY
 
 logger = logging.getLogger(__name__)
@@ -29,7 +29,12 @@ class VisitorRequestMiddleware:
             return self.get_response(request)
         try:
             visitor = Visitor.objects.get(uuid=visitor_uuid)
+            visitor.validate()
         except Visitor.DoesNotExist:
+            logger.debug("Visitor pass does not exist: %s", visitor_uuid)
+            return self.get_response(request)
+        except InvalidVisitorPass as ex:
+            logger.debug("Invalid access request: %s", ex)
             return self.get_response(request)
         else:
             request.visitor = visitor
@@ -71,7 +76,10 @@ class VisitorSessionMiddleware:
             return self.get_response(request)
 
         try:
-            visitor = Visitor.objects.get(uuid=visitor_uuid)
+            visitor = Visitor.objects.get(
+                uuid=visitor_uuid,
+                is_active=True,
+            )
         except Visitor.DoesNotExist:
             session.clear_visitor_uuid(request)
             return self.get_response(request)

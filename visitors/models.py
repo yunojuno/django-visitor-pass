@@ -1,6 +1,8 @@
 from __future__ import annotations
 
+import datetime
 import uuid
+from typing import Any
 from urllib.parse import parse_qs, urlencode, urlparse, urlunparse
 
 from django.db import models
@@ -9,11 +11,17 @@ from django.http.request import HttpRequest
 from django.utils.timezone import now as tz_now
 from django.utils.translation import gettext_lazy as _lazy
 
-from .settings import VISITOR_QUERYSTRING_KEY
+from .settings import VISITOR_QUERYSTRING_KEY, VISITOR_TOKEN_EXPIRY
+
+
+class InvalidVisitorPass(Exception):
+    pass
 
 
 class Visitor(models.Model):
     """A temporary visitor (betwixt anonymous and authenticated)."""
+
+    DEFAULT_TOKEN_EXPIRY = datetime.timedelta(seconds=VISITOR_TOKEN_EXPIRY)
 
     uuid = models.UUIDField(default=uuid.uuid4)
     first_name = models.CharField(max_length=150, blank=True)
@@ -29,12 +37,38 @@ class Visitor(models.Model):
         help_text=_lazy("Used to store arbitrary contextual data."),
     )
     last_updated_at = models.DateTimeField(auto_now=True)
+    expires_at = models.DateTimeField(
+        blank=True,
+        null=True,
+        help_text=_lazy(
+            "After this time the link can no longer be used - "
+            "defaults to VISITOR_TOKEN_EXPIRY."
+        ),
+    )
+    is_active = models.BooleanField(
+        default=True,
+        help_text=_lazy(
+            "Set to False to disable the visitor link and prevent further access."
+        ),
+    )
+
+    class Meta:
+        verbose_name = "Visitor pass"
+        verbose_name_plural = "Visitor passes"
 
     def __str__(self) -> str:
-        return f"{self.full_name} ({self.scope})"
+        return f"Visitor pass for {self.email} ({self.scope})"
 
     def __repr__(self) -> str:
-        return f"<Visitor id={self.id} email='{self.email}' scope='{self.scope}'>"
+        return (
+            f"<Visitor id={self.id} uuid='{self.uuid}' "
+            f"email='{self.email}' scope='{self.scope}'>"
+        )
+
+    def __init__(self, *args: Any, **kwargs: Any):
+        super().__init__(*args, **kwargs)
+        if not self.expires_at:
+            self.expires_at = self.created_at + self.DEFAULT_TOKEN_EXPIRY
 
     @property
     def full_name(self) -> str:
@@ -43,6 +77,25 @@ class Visitor(models.Model):
     @property
     def session_data(self) -> str:
         return str(self.uuid)
+
+    @property
+    def has_expired(self) -> bool:
+        """Return True if the expires_at timestamp has been passed (or not yet set)."""
+        if not self.expires_at:
+            return False
+        return self.expires_at < tz_now()
+
+    @property
+    def is_valid(self) -> bool:
+        """Return True if the token is active and not yet expired."""
+        return self.is_active and not self.has_expired
+
+    def validate(self) -> None:
+        """Raise InvalidVisitorPass if inactive or expired."""
+        if not self.is_active:
+            raise InvalidVisitorPass("Visitor pass is inactive")
+        if self.has_expired:
+            raise InvalidVisitorPass("Visitor pass has expired")
 
     def serialize(self) -> dict:
         """
@@ -69,6 +122,17 @@ class Visitor(models.Model):
         query.update({VISITOR_QUERYSTRING_KEY: self.uuid})
         parts[4] = urlencode(query)
         return urlunparse(parts)
+
+    def deactivate(self) -> None:
+        """Deactivate the token so it can no longer be used."""
+        self.is_active = False
+        self.save()
+
+    def reactivate(self) -> None:
+        """Reactivate the token so it can be reused."""
+        self.is_active = True
+        self.expires_at = tz_now() + self.DEFAULT_TOKEN_EXPIRY
+        self.save()
 
 
 class VisitorLogManager(models.Manager):
