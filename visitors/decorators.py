@@ -9,6 +9,8 @@ from django.core.exceptions import PermissionDenied
 from django.http import HttpRequest, HttpResponse
 from django.utils.translation import gettext as _
 
+from .models import VisitorLog
+
 logger = logging.getLogger(__name__)
 
 # universal scope - essentially unscoped access
@@ -49,6 +51,7 @@ def user_is_visitor(  # noqa: C901
     # an empty str - so use as default and fail if not overwritten.
     scope: str = "",
     bypass_func: Optional[Callable[[HttpRequest], bool]] = None,
+    log_visit: bool = True,
 ) -> Callable:
     """
     Decorate view functions that supports Visitor access.
@@ -61,15 +64,16 @@ def user_is_visitor(  # noqa: C901
     visitor restriction. Defaults to None (only visitors with appropriate
     scope allowed).
 
+    The 'log_visit' arg can be used to override the default logging - if this
+    is too noisy, for instance.
+
     """
     if not scope:
         raise ValueError("Decorator scope cannot be empty.")
 
     if view_func is None:
         return functools.partial(
-            user_is_visitor,
-            scope=scope,
-            bypass_func=bypass_func,
+            user_is_visitor, scope=scope, bypass_func=bypass_func, log_visit=log_visit
         )
 
     @functools.wraps(view_func)
@@ -94,13 +98,12 @@ def user_is_visitor(  # noqa: C901
         if not request.user.is_visitor:
             raise PermissionDenied(_("Visitor access denied"))
 
-        # Do they require a scope - if not, let them through.
-        if scope == SCOPE_ANY:
-            return view_func(*args, **kwargs)
-
-        # Does the visitor scope match the request scope?
-        if request.visitor.scope == scope:
-            return view_func(*args, **kwargs)
+        # Check the function scope matches (or is "*")
+        if scope in (SCOPE_ANY, request.visitor.scope):
+            response = view_func(*args, **kwargs)
+            if log_visit:
+                VisitorLog.objects.create_log(request, response.status_code)
+            return response
 
         # We have a visitor with the wrong scope
         raise PermissionDenied(_("Visitor access denied (invalid scope)."))

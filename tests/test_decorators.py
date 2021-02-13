@@ -4,6 +4,7 @@ from typing import Optional
 
 import pytest
 from django.contrib.auth.models import AnonymousUser, User
+from django.contrib.sessions.backends.base import SessionBase
 from django.core.exceptions import PermissionDenied
 from django.http import HttpRequest, HttpResponse
 from django.test import RequestFactory
@@ -22,6 +23,7 @@ class TestDecorators:
         request.user = user or AnonymousUser()
         request.visitor = visitor
         request.user.is_visitor = visitor is not None
+        request.session = SessionBase()
         return request
 
     def test_no_access(self):
