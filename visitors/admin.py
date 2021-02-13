@@ -85,6 +85,13 @@ class VisitorsAdmin(admin.ModelAdmin):
 
 @admin.register(VisitorLog)
 class VisitorLogAdmin(admin.ModelAdmin):
-    list_display = ("visitor", "session_key", "remote_addr", "request_uri", "timestamp")
+    list_display = (
+        "visitor",
+        "session_key",
+        "remote_addr",
+        "request_uri",
+        "status_code",
+        "timestamp",
+    )
     readonly_fields = [f.name for f in VisitorLog._meta.fields]
     pass

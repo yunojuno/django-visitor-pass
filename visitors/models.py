@@ -136,7 +136,7 @@ class Visitor(models.Model):
 
 
 class VisitorLogManager(models.Manager):
-    def create_log(self, request: HttpRequest) -> VisitorLog:
+    def create_log(self, request: HttpRequest, status_code: int) -> VisitorLog:
         """Extract values from HttpRequest and store locally."""
         return self.create(
             visitor=request.visitor,
@@ -155,6 +155,7 @@ class VisitorLogManager(models.Manager):
                 if "HTTP_X_FORWARDED_FOR" in request.META
                 else request.META.get("REMOTE_ADDR")
             ),
+            status_code=status_code,
         )
 
 
@@ -169,6 +170,7 @@ class VisitorLog(models.Model):
     query_string = models.TextField(blank=True)
     http_user_agent = models.TextField()
     http_referer = models.TextField()
+    status_code = models.PositiveIntegerField("HTTP Response", default=0)
     timestamp = models.DateTimeField(default=tz_now)
 
     objects = VisitorLogManager()

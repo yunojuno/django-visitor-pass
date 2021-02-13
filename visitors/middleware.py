@@ -9,7 +9,7 @@ from django.http.request import HttpRequest
 from django.http.response import HttpResponse
 
 from . import session
-from .models import InvalidVisitorPass, Visitor, VisitorLog
+from .models import InvalidVisitorPass, Visitor
 from .settings import VISITOR_QUERYSTRING_KEY
 
 logger = logging.getLogger(__name__)
@@ -39,7 +39,6 @@ class VisitorRequestMiddleware:
         else:
             request.visitor = visitor
             request.user.is_visitor = True
-            VisitorLog.objects.create_log(request)
         return self.get_response(request)
 
 
