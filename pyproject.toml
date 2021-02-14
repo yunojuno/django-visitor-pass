@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "django-visitor-pass"
-version = "0.3"
+version = "0.3.1"
 description = "Django app for managing temporary session-based users."
 license = "MIT"
 authors = ["YunoJuno <code@yunojuno.com>"]
