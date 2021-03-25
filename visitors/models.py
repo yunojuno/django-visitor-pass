@@ -11,11 +11,8 @@ from django.http.request import HttpRequest
 from django.utils.timezone import now as tz_now
 from django.utils.translation import gettext_lazy as _lazy
 
+from .exceptions import InvalidVisitorPass
 from .settings import VISITOR_QUERYSTRING_KEY, VISITOR_TOKEN_EXPIRY
-
-
-class InvalidVisitorPass(Exception):
-    pass
 
 
 class Visitor(models.Model):
