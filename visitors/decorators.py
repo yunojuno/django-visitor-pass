@@ -107,7 +107,8 @@ def user_is_visitor(  # noqa: C901
         if bypass_func and bypass_func(request):
             return view_func(*args, **kwargs)
 
-        def _raise_or_redirect(message: str) -> Optional[HttpResponseRedirect]:
+        def _raise_or_redirect(message: str) -> HttpResponseRedirect:
+            """Redirect to self-service page if appropriate."""
             if self_service:
                 return redirect_to_self_service(request, scope)
             raise VisitorAccessDenied(_(message), scope=scope)
@@ -115,10 +116,11 @@ def user_is_visitor(  # noqa: C901
         # Do we have a visitor?
         if not request.user.is_visitor:
             return _raise_or_redirect("Visitor access denied")
+
         # Check the function scope matches (or is "*")
         if scope not in (SCOPE_ANY, request.visitor.scope):
             # We have a visitor with the wrong scope
-            _raise_or_redirect("Visitor access denied (invalid scope)")
+            return _raise_or_redirect("Visitor access denied (invalid scope)")
 
         response = view_func(*args, **kwargs)
         if log_visit:
