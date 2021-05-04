@@ -10,4 +10,9 @@ urlpatterns = [
         views.SelfService.as_view(),
         name="self-service",
     ),
+    path(
+        "self-service/<uuid:visitor_uuid>/success/",
+        views.self_service_success,
+        name="self-service-success",
+    ),
 ]

@@ -6,6 +6,7 @@ from django import forms
 from django.http import HttpRequest, HttpResponse
 from django.http.response import HttpResponseRedirect
 from django.shortcuts import get_object_or_404, render
+from django.urls import reverse
 from django.views import View
 
 from .models import Visitor
@@ -70,9 +71,8 @@ class SelfService(View):
             visitor.is_active = True
             visitor.save()
             redirect_to = form.cleaned_data["redirect_to"]
-            return HttpResponseRedirect(
-                redirect_to=redirect_to + f"?vuid={visitor_uuid}"
-            )
+            url = reverse("self-service-success", kwargs={"visitor_uuid": visitor_uuid})
+            return HttpResponseRedirect(f"{url}?next={redirect_to}")
         return render(
             request,
             template_name="self_service.html",
@@ -81,3 +81,13 @@ class SelfService(View):
                 "form": form,
             },
         )
+
+
+def self_service_success(request: HttpRequest, visitor_uuid: uuid.UUID) -> HttpResponse:
+    """Display the success page."""
+    visitor = get_object_or_404(Visitor, uuid=visitor_uuid)
+    redirect_to = request.GET.get("next")
+    return render(request, template_name="self_service_success.html", context={
+        "visitor": visitor,
+        "redirect_to": redirect_to
+    })
