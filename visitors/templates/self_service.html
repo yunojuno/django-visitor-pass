@@ -1,9 +1,30 @@
 <html>
+    <head>
+        <style>
+            input {
+                display: list-item;
+                margin-bottom: 10px;
+            }
+        </style>
+    </head>
     <body>
-        Hello, {{ visitor }}.
-        <form action="." method="post">
-            {% csrf_token %} {{ form }}
-            <input type="submit" value="Submit" />
-        </form>
+        <div style="max-width: 800px">
+            <h1>Access Denied</h1>
+            <h2>Self-Service demonstration</h2>
+            <p>
+                You have been denied access to a page that requires a Visitor Pass. This page is
+                marked as 'self-service', which means that you can grant yourself access by filling
+                in the details below. You will be redirected to the original page within a valid
+                'visitor' session.
+            </p>
+            <p>
+                NB in production the visitor pass will be emailed to you, as we require confirmation
+                that you are the owner of the email address.
+            </p>
+            <form action="." method="post">
+                {% csrf_token %} {{ form }}
+                <input type="submit" value="Submit" />
+            </form>
+        </div>
     </body>
 </html>

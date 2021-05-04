@@ -6,10 +6,12 @@ from typing import Any, Callable, Optional
 
 from django.conf import settings
 from django.http import HttpRequest, HttpResponse
+from django.http.response import HttpResponseRedirect
+from django.urls import reverse
 from django.utils.translation import gettext as _
 
 from .exceptions import VisitorAccessDenied
-from .models import VisitorLog
+from .models import Visitor, VisitorLog
 
 logger = logging.getLogger(__name__)
 
@@ -105,23 +107,42 @@ def user_is_visitor(  # noqa: C901
         if bypass_func and bypass_func(request):
             return view_func(*args, **kwargs)
 
-        def _raise(message: str) -> None:
-            raise VisitorAccessDenied(
-                _(message), scope=scope, self_service=self_service
-            )
+        def _raise_or_redirect(message: str) -> Optional[HttpResponseRedirect]:
+            if self_service:
+                return redirect_to_self_service(request, scope)
+            raise VisitorAccessDenied(_(message), scope=scope)
 
         # Do we have a visitor?
         if not request.user.is_visitor:
-            _raise("Visitor access denied")
-
+            return _raise_or_redirect("Visitor access denied")
         # Check the function scope matches (or is "*")
-        if scope in (SCOPE_ANY, request.visitor.scope):
-            response = view_func(*args, **kwargs)
-            if log_visit:
-                VisitorLog.objects.create_log(request, response.status_code)
-            return response
+        if scope not in (SCOPE_ANY, request.visitor.scope):
+            # We have a visitor with the wrong scope
+            _raise_or_redirect("Visitor access denied (invalid scope)")
 
-        # We have a visitor with the wrong scope
-        _raise("Visitor access denied (invalid scope)")
+        response = view_func(*args, **kwargs)
+        if log_visit:
+            VisitorLog.objects.create_log(request, response.status_code)
+        return response
 
     return inner
+
+
+def redirect_to_self_service(request: HttpRequest, scope: str) -> HttpResponseRedirect:
+    """Create inactive Visitor token and redirect to enable self-service."""
+    # create an inactive token for the time being. This will be used by
+    # the auto-enroll view. The user fills in their name and email, which
+    # overwrites the blank values here, and sets the token to be active.
+    visitor = Visitor.objects.create(
+        email="anon@example.com",
+        scope=scope,
+        is_active=False,
+        context={"self-service": True},
+    )
+    return HttpResponseRedirect(
+        reverse(
+            "visitors:self-service",
+            kwargs={"visitor_uuid": visitor.uuid},
+        )
+        + f"?next={request.get_full_path()}"
+    )

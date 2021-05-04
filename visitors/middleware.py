@@ -1,16 +1,14 @@
 from __future__ import annotations
 
 import logging
-from typing import Callable, Optional
+from typing import Callable
 
 from django.conf import settings
 from django.core.exceptions import MiddlewareNotUsed
 from django.http.request import HttpRequest
-from django.http.response import HttpResponse, HttpResponseRedirect
-from django.urls import reverse
+from django.http.response import HttpResponse
 
 from . import session
-from .exceptions import VisitorAccessDenied
 from .models import InvalidVisitorPass, Visitor
 from .settings import VISITOR_QUERYSTRING_KEY
 
@@ -89,46 +87,6 @@ class VisitorSessionMiddleware:
             request.user.is_visitor = True
 
         return self.get_response(request)
-
-
-class VisitorSelfServiceMiddleware:
-    """Handle auto-enrollment."""
-
-    def __init__(self, get_response: Callable):
-        self.get_response = get_response
-
-    def __call__(self, request: HttpRequest) -> HttpResponse:
-        return self.get_response(request)
-
-    def process_exception(
-        self, request: HttpRequest, exception: Exception
-    ) -> Optional[HttpResponse]:
-        """
-        Handle VisitorAccessDenied errors.
-
-        If we have an AnonymousUser and `self_service=True` then we
-        send the user to the autoenroll page.
-
-        """
-        if request.user.is_authenticated:
-            return None
-        if not isinstance(exception, VisitorAccessDenied):
-            return None
-        if not exception.self_service:
-            return None
-
-        # create an inactive token for the time being. This will be used by
-        # the auto-enroll view. The user fills in their name and email, which
-        # overwrites the blank values here, and sets the token to be active.
-        visitor = Visitor.objects.create(
-            email="anon@example.com",
-            scope=exception.scope,
-            is_active=False,
-            context={"self-service": True},
-        )
-        return HttpResponseRedirect(
-            reverse("visitors:self-service", kwargs={"visitor_uuid": visitor.uuid})
-        )
 
 
 class VisitorDebugMiddleware:

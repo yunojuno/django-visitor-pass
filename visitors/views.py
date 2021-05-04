@@ -4,6 +4,7 @@ import uuid
 
 from django import forms
 from django.http import HttpRequest, HttpResponse
+from django.http.response import HttpResponseRedirect
 from django.shortcuts import get_object_or_404, render
 from django.views import View
 
@@ -16,7 +17,8 @@ class SelfServiceForm(forms.Form):
     first_name = forms.CharField(max_length=150)
     last_name = forms.CharField(max_length=150)
     email = forms.EmailField(required=True)
-    vuid = forms.HiddenInput()
+    vuid = forms.CharField(widget=forms.HiddenInput())
+    redirect_to = forms.CharField(widget=forms.HiddenInput())
 
 
 class SelfService(View):
@@ -39,14 +41,25 @@ class SelfService(View):
     def get(self, request: HttpRequest, visitor_uuid: uuid.UUID) -> HttpResponse:
         """Render the initial form."""
         visitor = get_object_or_404(Visitor, uuid=visitor_uuid)
-        form = SelfServiceForm()
+        redirect_to = request.GET.get("next")
+        form = SelfServiceForm(
+            initial={"vuid": visitor.uuid, "redirect_to": redirect_to}
+        )
         return render(
             request,
             template_name="self_service.html",
-            context={"visitor": visitor, "form": form},
+            context={
+                "visitor": visitor,
+                "redirect_to": redirect_to,
+                "form": form,
+            },
         )
 
-    def post(self, request: HttpRequest, visitor_uuid: uuid.UUID) -> HttpResponse:
+    def post(
+        self,
+        request: HttpRequest,
+        visitor_uuid: uuid.UUID,
+    ) -> HttpResponse:
         """Process the form and send the pass email."""
         visitor = get_object_or_404(Visitor, uuid=visitor_uuid)
         form = SelfServiceForm(request.POST)
@@ -56,4 +69,15 @@ class SelfService(View):
             visitor.email = form.cleaned_data["email"]
             visitor.is_active = True
             visitor.save()
-        return HttpResponse("OK")
+            redirect_to = form.cleaned_data["redirect_to"]
+            return HttpResponseRedirect(
+                redirect_to=redirect_to + f"?vuid={visitor_uuid}"
+            )
+        return render(
+            request,
+            template_name="self_service.html",
+            context={
+                "visitor": visitor,
+                "form": form,
+            },
+        )

@@ -32,7 +32,6 @@ MIDDLEWARE = [
     "django.contrib.messages.middleware.MessageMiddleware",
     "visitors.middleware.VisitorRequestMiddleware",
     "visitors.middleware.VisitorSessionMiddleware",
-    "visitors.middleware.VisitorSelfServiceMiddleware",
     "visitors.middleware.VisitorDebugMiddleware",
 ]
 
