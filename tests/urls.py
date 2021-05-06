@@ -11,6 +11,7 @@ admin.autodiscover()
 urlpatterns = [
     path("admin/", admin.site.urls),
     path("visitors/", include(visitor_urls, namespace="visitors")),
-    path("foo/", views.foo),
-    path("bar/", views.bar),
+    path("foo/", views.foo, name="foo"),
+    path("bar/", views.bar, name="bar"),
+    path("", views.index, name="index")
 ]

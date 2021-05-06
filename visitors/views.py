@@ -48,7 +48,7 @@ class SelfService(View):
         )
         return render(
             request,
-            template_name="self_service.html",
+            template_name="self_service_request.html",
             context={
                 "visitor": visitor,
                 "redirect_to": redirect_to,
@@ -71,11 +71,13 @@ class SelfService(View):
             visitor.is_active = True
             visitor.save()
             redirect_to = form.cleaned_data["redirect_to"]
-            url = reverse("self-service-success", kwargs={"visitor_uuid": visitor_uuid})
+            url = reverse(
+                "visitors:self-service-success", kwargs={"visitor_uuid": visitor_uuid}
+            )
             return HttpResponseRedirect(f"{url}?next={redirect_to}")
         return render(
             request,
-            template_name="self_service.html",
+            template_name="self_service_request.html",
             context={
                 "visitor": visitor,
                 "form": form,
@@ -87,7 +89,8 @@ def self_service_success(request: HttpRequest, visitor_uuid: uuid.UUID) -> HttpR
     """Display the success page."""
     visitor = get_object_or_404(Visitor, uuid=visitor_uuid)
     redirect_to = request.GET.get("next")
-    return render(request, template_name="self_service_success.html", context={
-        "visitor": visitor,
-        "redirect_to": redirect_to
-    })
+    return render(
+        request,
+        template_name="self_service_success.html",
+        context={"visitor": visitor, "redirect_to": redirect_to},
+    )
