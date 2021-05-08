@@ -2,24 +2,15 @@ from __future__ import annotations
 
 import uuid
 
-from django import forms
 from django.http import HttpRequest, HttpResponse
 from django.http.response import HttpResponseRedirect
 from django.shortcuts import get_object_or_404, render
 from django.urls import reverse
 from django.views import View
 
+from .forms import SelfServiceForm
 from .models import Visitor
-
-
-class SelfServiceForm(forms.Form):
-    """Form for capturing user info."""
-
-    first_name = forms.CharField(max_length=150)
-    last_name = forms.CharField(max_length=150)
-    email = forms.EmailField(required=True)
-    vuid = forms.CharField(widget=forms.HiddenInput())
-    redirect_to = forms.CharField(widget=forms.HiddenInput())
+from .signals import self_service_visitor_created
 
 
 class SelfService(View):
@@ -42,18 +33,11 @@ class SelfService(View):
     def get(self, request: HttpRequest, visitor_uuid: uuid.UUID) -> HttpResponse:
         """Render the initial form."""
         visitor = get_object_or_404(Visitor, uuid=visitor_uuid)
-        redirect_to = request.GET.get("next")
-        form = SelfServiceForm(
-            initial={"vuid": visitor.uuid, "redirect_to": redirect_to}
-        )
+        form = SelfServiceForm(initial={"vuid": visitor.uuid})
         return render(
             request,
-            template_name="self_service_request.html",
-            context={
-                "visitor": visitor,
-                "redirect_to": redirect_to,
-                "form": form,
-            },
+            template_name="visitors/self_service_request.html",
+            context={"visitor": visitor, "form": form},
         )
 
     def post(
@@ -61,23 +45,33 @@ class SelfService(View):
         request: HttpRequest,
         visitor_uuid: uuid.UUID,
     ) -> HttpResponse:
-        """Process the form and send the pass email."""
+        """
+        Process the form and send the pass email.
+
+        The core function here is to update the visitor object with
+        the details from the form. Once that is done the visitor
+        pass is active and can be sent to the user. This view fires
+        the `self_service_visitor_created` signal - you should use
+        this to send out the notification.
+
+        """
         visitor = get_object_or_404(Visitor, uuid=visitor_uuid)
         form = SelfServiceForm(request.POST)
         if form.is_valid():
             visitor.first_name = form.cleaned_data["first_name"]
             visitor.last_name = form.cleaned_data["last_name"]
             visitor.email = form.cleaned_data["email"]
-            visitor.is_active = True
-            visitor.save()
-            redirect_to = form.cleaned_data["redirect_to"]
+            visitor.reactivate()
+            # hook into this to send the email notification to the user.
+            self_service_visitor_created.send(sender=self.__class__, visitor=visitor)
             url = reverse(
-                "visitors:self-service-success", kwargs={"visitor_uuid": visitor_uuid}
+                "visitors:self-service-success",
+                kwargs={"visitor_uuid": visitor_uuid},
             )
-            return HttpResponseRedirect(f"{url}?next={redirect_to}")
+            return HttpResponseRedirect(url)
         return render(
             request,
-            template_name="self_service_request.html",
+            template_name="visitors/self_service_request.html",
             context={
                 "visitor": visitor,
                 "form": form,
@@ -88,9 +82,8 @@ class SelfService(View):
 def self_service_success(request: HttpRequest, visitor_uuid: uuid.UUID) -> HttpResponse:
     """Display the success page."""
     visitor = get_object_or_404(Visitor, uuid=visitor_uuid)
-    redirect_to = request.GET.get("next")
     return render(
         request,
-        template_name="self_service_success.html",
-        context={"visitor": visitor, "redirect_to": redirect_to},
+        template_name="visitors/self_service_success.html",
+        context={"visitor": visitor},
     )

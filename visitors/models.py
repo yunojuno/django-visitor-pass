@@ -19,6 +19,7 @@ class Visitor(models.Model):
     """A temporary visitor (betwixt anonymous and authenticated)."""
 
     DEFAULT_TOKEN_EXPIRY = datetime.timedelta(seconds=VISITOR_TOKEN_EXPIRY)
+    DEFAULT_SELF_SERVICE_EMAIL = "anon@example.com"
 
     uuid = models.UUIDField(default=uuid.uuid4)
     first_name = models.CharField(max_length=150, blank=True)
