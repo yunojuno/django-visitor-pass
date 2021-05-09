@@ -6,5 +6,6 @@ class DemoConfig(AppConfig):
     name = "demo"
 
     def ready(self) -> None:
-        from demo.signals import send_visitor_notification
+        from . import signals  # noqa: F401
+
         return super().ready()

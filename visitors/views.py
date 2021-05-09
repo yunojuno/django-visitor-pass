@@ -8,6 +8,8 @@ from django.shortcuts import get_object_or_404, render
 from django.urls import reverse
 from django.views import View
 
+from visitors.exceptions import InvalidVisitorPass
+
 from .forms import SelfServiceForm
 from .models import Visitor
 from .signals import self_service_visitor_created
@@ -33,6 +35,10 @@ class SelfService(View):
     def get(self, request: HttpRequest, visitor_uuid: uuid.UUID) -> HttpResponse:
         """Render the initial form."""
         visitor = get_object_or_404(Visitor, uuid=visitor_uuid)
+        if visitor.is_active:
+            raise InvalidVisitorPass("Visitor pass has already been activated")
+        if visitor.has_expired:
+            raise InvalidVisitorPass("Visitor pass has expired")
         form = SelfServiceForm(initial={"vuid": visitor.uuid})
         return render(
             request,
@@ -40,11 +46,7 @@ class SelfService(View):
             context={"visitor": visitor, "form": form},
         )
 
-    def post(
-        self,
-        request: HttpRequest,
-        visitor_uuid: uuid.UUID,
-    ) -> HttpResponse:
+    def post(self, request: HttpRequest, visitor_uuid: uuid.UUID) -> HttpResponse:
         """
         Process the form and send the pass email.
 

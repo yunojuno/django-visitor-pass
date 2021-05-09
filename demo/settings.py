@@ -55,7 +55,7 @@ TEMPLATES = [
 
 STATIC_URL = "/static/"
 
-SECRET_KEY = "secret"
+SECRET_KEY = "secret"  # noqa: S105
 
 LOGGING = {
     "version": 1,
