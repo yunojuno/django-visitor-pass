@@ -70,16 +70,16 @@ jobs:
     #       # Maps tcp port 5432 on service container to the host
     #       - 5432:5432
 
-    steps:
-      - name: Check out the repository
-        uses: actions/checkout@v2
+    # steps:
+    #   - name: Check out the repository
+    #     uses: actions/checkout@v2
 
-      - name: Set up Python ${{ matrix.python }}
-        uses: actions/setup-python@v1
-        with:
-          python-version: ${{ matrix.python }}
+    #   - name: Set up Python ${{ matrix.python }}
+    #     uses: actions/setup-python@v1
+    #     with:
+    #       python-version: ${{ matrix.python }}
 
-      - name: Install and run tox
-        run: |
-          pip install tox
-          tox
+    #   - name: Install and run tox
+    #     run: |
+    #       pip install tox
+    #       tox
