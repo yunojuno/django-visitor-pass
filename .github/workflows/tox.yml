@@ -9,39 +9,49 @@ on:
     types: [opened, synchronize, reopened]
 
 jobs:
-  format:
-    name: Check formatting
+  demo:
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        toxenv: [fmt,lint,mypy]
-    env:
-      TOXENV: ${{ matrix.toxenv }}
-
     steps:
-      - name: Check out the repository
-        uses: actions/checkout@v2
-
-      - name: Set up Python 3.8
-        uses: actions/setup-python@v1
-        with:
-          python-version: 3.8
-
-      - name: Install and run tox
+      - name: print diff
         run: |
-          pip install tox
-          tox
+          git diff HEAD~1 --name-only
+      - name: check contents
+        run: |
+          [[ $(git diff HEAD~1 --name-only) =~ tests\/views ]] && echo "found view file"
 
-  test:
-    name: Run tests
-    runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        python: [3.8,3.9]
-        django: [31,master]
+  # format:
+  #   name: Check formatting
+  #   runs-on: ubuntu-latest
+  #   strategy:
+  #     matrix:
+  #       toxenv: [fmt,lint,mypy]
+  #   env:
+  #     TOXENV: ${{ matrix.toxenv }}
 
-    env:
-      TOXENV: py${{ matrix.python }}-django${{ matrix.django }}
+  #   steps:
+  #     - name: Check out the repository
+  #       uses: actions/checkout@v2
+
+  #     - name: Set up Python 3.8
+  #       uses: actions/setup-python@v1
+  #       with:
+  #         python-version: 3.8
+
+  #     - name: Install and run tox
+  #       run: |
+  #         pip install tox
+  #         tox
+
+  # test:
+  #   name: Run tests
+  #   runs-on: ubuntu-latest
+  #   strategy:
+  #     matrix:
+  #       python: [3.8,3.9]
+  #       django: [31,master]
+
+  #   env:
+  #     TOXENV: py${{ matrix.python }}-django${{ matrix.django }}
 
     # services:
     #   postgres:
