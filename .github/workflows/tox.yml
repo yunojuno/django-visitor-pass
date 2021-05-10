@@ -14,10 +14,10 @@ jobs:
     steps:
       - name: print diff
         run: |
-          git diff HEAD~1 --name-only
-      - name: check contents
-        run: |
-          [[ $(git diff HEAD~1 --name-only) =~ tests\/views ]] && echo "found view file"
+          echo ${{ steps.files.outputs.added_modified }}
+      # - name: check contents
+      #   run: |
+      #     [[ $(git diff HEAD~1 --name-only) =~ tests\/views ]] && echo "found view file"
 
   # format:
   #   name: Check formatting
