@@ -12,5 +12,6 @@ urlpatterns = [
     path("visitors/", include(visitor_urls, namespace="visitors")),
     path("foo/", demo.views.foo, name="foo"),
     path("bar/", demo.views.bar, name="bar"),
+    path("logout/", demo.views.logout, name="logout"),
     path("", demo.views.index, name="index"),
 ]

@@ -55,7 +55,7 @@ class Visitor(models.Model):
         verbose_name_plural = "Visitor passes"
 
     def __str__(self) -> str:
-        return f"Visitor pass for {self.email} ({self.scope})"
+        return f"Visitor pass {self.id} (scope='{self.scope}')"
 
     def __repr__(self) -> str:
         return (
