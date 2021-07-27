@@ -15,6 +15,17 @@ from .exceptions import InvalidVisitorPass
 from .settings import VISITOR_QUERYSTRING_KEY, VISITOR_TOKEN_EXPIRY
 
 
+class VisitorManager(models.Manager):
+    def create_temp_visitor(self, scope: str, redirect_to: str) -> Visitor:
+        """Create empty Visitor object for self-service."""
+        return self.create(
+            email=Visitor.DEFAULT_SELF_SERVICE_EMAIL,
+            scope=scope,
+            is_active=False,
+            context={"self-service": True, "redirect_to": redirect_to},
+        )
+
+
 class Visitor(models.Model):
     """A temporary visitor (betwixt anonymous and authenticated)."""
 
@@ -49,6 +60,8 @@ class Visitor(models.Model):
             "Set to False to disable the visitor link and prevent further access."
         ),
     )
+
+    objects = VisitorManager()
 
     class Meta:
         verbose_name = "Visitor pass"
@@ -87,6 +100,10 @@ class Visitor(models.Model):
     def is_valid(self) -> bool:
         """Return True if the token is active and not yet expired."""
         return self.is_active and not self.has_expired
+
+    def is_self_service(self) -> bool:
+        """Return True if the token was a self-service token."""
+        return self.context.get("self-service", False)
 
     def validate(self) -> None:
         """Raise InvalidVisitorPass if inactive or expired."""

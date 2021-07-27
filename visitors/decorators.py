@@ -134,11 +134,8 @@ def redirect_to_self_service(request: HttpRequest, scope: str) -> HttpResponseRe
     # create an inactive token for the time being. This will be used by
     # the auto-enroll view. The user fills in their name and email, which
     # overwrites the blank values here, and sets the token to be active.
-    visitor = Visitor.objects.create(
-        email=Visitor.DEFAULT_SELF_SERVICE_EMAIL,
-        scope=scope,
-        is_active=False,
-        context={"self-service": True, "redirect_to": request.get_full_path()},
+    visitor = Visitor.objects.create_temp_visitor(
+        scope=scope, redirect_to=request.get_full_path()
     )
     return HttpResponseRedirect(
         reverse(
