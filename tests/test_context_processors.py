@@ -12,9 +12,12 @@ class TestVisitorContextProcessor:
     def test_visitor(self):
         request = HttpRequest()
         request.visitor = mock.Mock(spec=Visitor)
-        assert context_processors.visitor(request)["visitor"] == request.visitor
+        assert (
+            context_processors.visitor(request)["visitor"]
+            == request.visitor.serialize.return_value
+        )
 
     def test_no_visitor(self):
         request = HttpRequest()
         request.visitor = None
-        assert context_processors.visitor(request)["visitor"] == request.visitor
+        assert context_processors.visitor(request)["visitor"] == None
