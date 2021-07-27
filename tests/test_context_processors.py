@@ -20,4 +20,4 @@ class TestVisitorContextProcessor:
     def test_no_visitor(self):
         request = HttpRequest()
         request.visitor = None
-        assert context_processors.visitor(request)["visitor"] == None
+        assert context_processors.visitor(request)["visitor"] is None

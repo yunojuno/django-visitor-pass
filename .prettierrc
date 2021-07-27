@@ -8,5 +8,11 @@
     "bracketSpacing": true,
     "jsxBracketSameLine": false,
     "proseWrap": "always",
-    "endOfLine": "auto"
+    "endOfLine": "auto",
+    "overrides": [
+        {
+            "files": "*.yaml,*.yml",
+            "options": { "tabWidth": 2 }
+        }
+    ]
 }

@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-from typing import Optional
-
 from django.conf import settings
 
 
@@ -26,7 +24,7 @@ VISITOR_QUERYSTRING_KEY: str = _setting("VISITOR_QUERYSTRING_KEY", "vuid")
 #   inactivity.
 # * If value is None, the session reverts to using the global session expiry
 #   policy.
-VISITOR_SESSION_EXPIRY: Optional[int] = _setting("VISITOR_SESSION_EXPIRY", 0)
+VISITOR_SESSION_EXPIRY: int | None = _setting("VISITOR_SESSION_EXPIRY", 0)
 
 # Value used to set the expiry of the visitor token - the point at which it can
 # no longer be used. NB this is separate from the session expiry. Once the token

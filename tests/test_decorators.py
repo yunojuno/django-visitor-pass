@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-from typing import Optional
-
 import pytest
 from django.contrib.auth.models import AnonymousUser, User
 from django.contrib.sessions.backends.base import SessionBase
@@ -26,7 +24,7 @@ def user() -> User:
 @pytest.mark.django_db
 class TestDecorators:
     def _request(
-        self, user: Optional[User] = None, visitor: Optional[Visitor] = None
+        self, user: User | None = None, visitor: Visitor | None = None
     ) -> HttpRequest:
         factory = RequestFactory()
         request = factory.get("/")

@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import json
-from typing import Optional
 
 from django.contrib import admin, messages
 from django.db.models.query import QuerySet
@@ -11,7 +10,7 @@ from django.utils.safestring import mark_safe
 from .models import Visitor, VisitorLog
 
 
-def pretty_print(data: Optional[dict]) -> str:
+def pretty_print(data: dict | None) -> str:
     """Convert dict into formatted HTML."""
     if data is None:
         return ""

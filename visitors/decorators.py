@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import functools
 import logging
-from typing import Any, Callable, Optional
+from typing import Any, Callable
 
 from django.conf import settings
 from django.core.exceptions import PermissionDenied
@@ -37,7 +37,7 @@ def is_authenticated(user: settings.AUTH_USER_MODEL) -> bool:
     return user.is_authenticated
 
 
-def _get_request_arg(*args: Any) -> Optional[HttpRequest]:
+def _get_request_arg(*args: Any) -> HttpRequest | None:
     """Extract the arg that is an HttpRequest object."""
     for arg in args:
         if isinstance(arg, HttpRequest):
@@ -46,11 +46,11 @@ def _get_request_arg(*args: Any) -> Optional[HttpRequest]:
 
 
 def user_is_visitor(  # noqa: C901
-    view_func: Optional[Callable] = None,
+    view_func: Callable | None = None,
     # scope must be a kwarg as view_func is one, but we want to disallow
     # an empty str - so use as default and fail if not overwritten.
     scope: str = "",
-    bypass_func: Optional[Callable[[HttpRequest], bool]] = None,
+    bypass_func: Callable[[HttpRequest], bool] | None = None,
     log_visit: bool = True,
 ) -> Callable:
     """
