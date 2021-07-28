@@ -6,19 +6,10 @@ from django.contrib.sessions.backends.base import SessionBase
 from django.core.exceptions import PermissionDenied
 from django.http import HttpRequest, HttpResponse
 from django.test import RequestFactory
+from django.urls import reverse
 
 from visitors.decorators import user_is_visitor
 from visitors.models import Visitor, VisitorLog
-
-
-@pytest.fixture
-def visitor() -> Visitor:
-    return Visitor.objects.create(email="fred@example.com", scope="foo")
-
-
-@pytest.fixture
-def user() -> User:
-    return User.objects.create(username="Fred")
 
 
 @pytest.mark.django_db
@@ -119,3 +110,19 @@ class TestDecorators:
 
         _ = view(request)
         assert VisitorLog.objects.count() == 0
+
+    def test_self_service_redirect(self):
+        request = self._request(visitor=None)
+
+        @user_is_visitor(scope="foo", self_service=True)
+        def view(request: HttpRequest) -> HttpResponse:
+            return HttpResponse("OK")
+
+        response = view(request)
+        assert response.status_code == 302
+        visitor = Visitor.objects.get()
+        assert visitor.is_self_service
+        assert not visitor.is_active
+        assert response.url == reverse(
+            "visitors:self-service", kwargs={"visitor_uuid": visitor.uuid}
+        )

@@ -11,19 +11,28 @@ from django.http.request import HttpRequest
 from django.utils.timezone import now as tz_now
 from django.utils.translation import gettext_lazy as _lazy
 
+from .exceptions import InvalidVisitorPass
 from .settings import VISITOR_QUERYSTRING_KEY, VISITOR_TOKEN_EXPIRY
 
 
-class InvalidVisitorPass(Exception):
-    pass
+class VisitorManager(models.Manager):
+    def create_temp_visitor(self, scope: str, redirect_to: str) -> Visitor:
+        """Create empty Visitor object for self-service."""
+        return self.create(
+            email=Visitor.DEFAULT_SELF_SERVICE_EMAIL,
+            scope=scope,
+            is_active=False,
+            context={"self-service": True, "redirect_to": redirect_to},
+        )
 
 
 class Visitor(models.Model):
     """A temporary visitor (betwixt anonymous and authenticated)."""
 
     DEFAULT_TOKEN_EXPIRY = datetime.timedelta(seconds=VISITOR_TOKEN_EXPIRY)
+    DEFAULT_SELF_SERVICE_EMAIL = "anon@example.com"
 
-    uuid = models.UUIDField(default=uuid.uuid4)
+    uuid = models.UUIDField(default=uuid.uuid4, unique=True)
     first_name = models.CharField(max_length=150, blank=True)
     last_name = models.CharField(max_length=150, blank=True)
     email = models.EmailField(db_index=True)
@@ -52,12 +61,14 @@ class Visitor(models.Model):
         ),
     )
 
+    objects = VisitorManager()
+
     class Meta:
         verbose_name = "Visitor pass"
         verbose_name_plural = "Visitor passes"
 
     def __str__(self) -> str:
-        return f"Visitor pass for {self.email} ({self.scope})"
+        return f"Visitor pass {self.id} (scope='{self.scope}')"
 
     def __repr__(self) -> str:
         return (
@@ -89,6 +100,10 @@ class Visitor(models.Model):
     def is_valid(self) -> bool:
         """Return True if the token is active and not yet expired."""
         return self.is_active and not self.has_expired
+
+    def is_self_service(self) -> bool:
+        """Return True if the token was a self-service token."""
+        return self.context.get("self-service", False)
 
     def validate(self) -> None:
         """Raise InvalidVisitorPass if inactive or expired."""

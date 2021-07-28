@@ -17,6 +17,12 @@ def foo(request: HttpRequest) -> HttpResponse:
     return HttpResponse("OK")
 
 
+# Test view that supports self-service
+@user_is_visitor(scope="bar", self_service=True)
+def bar(request: HttpRequest) -> HttpResponse:
+    return render(request, template_name="bar.html")
+
+
 # Deactivate any current visitor token - this is analagous
 # to "logging out" an authenticated user.
 def logout(request: HttpRequest) -> HttpResponse:
