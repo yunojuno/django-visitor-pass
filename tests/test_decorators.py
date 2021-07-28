@@ -12,16 +12,6 @@ from visitors.decorators import user_is_visitor
 from visitors.models import Visitor, VisitorLog
 
 
-@pytest.fixture
-def visitor() -> Visitor:
-    return Visitor.objects.create(email="fred@example.com", scope="foo")
-
-
-@pytest.fixture
-def user() -> User:
-    return User.objects.create(username="Fred")
-
-
 @pytest.mark.django_db
 class TestDecorators:
     def _request(
