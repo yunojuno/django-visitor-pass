@@ -60,6 +60,13 @@ class TestVisitorRequestMiddleware(TestVisitorMiddlewareBase):
         assert not request.user.is_visitor
         assert not request.visitor
 
+    def test_token_validation_error(self, visitor: Visitor) -> None:
+        """Test malformed UUID raises 400."""
+        request = self.request("/?vuid=123")
+        middleware = VisitorRequestMiddleware(lambda r: r)
+        response = middleware(request)
+        assert response.status_code == 400
+
     def test_valid_token(self, visitor: Visitor) -> None:
         request = self.request(visitor.tokenise("/"))
         middleware = VisitorRequestMiddleware(lambda r: r)

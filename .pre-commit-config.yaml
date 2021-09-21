@@ -1,19 +1,19 @@
 repos:
   # python import sorting - will amend files
   - repo: https://github.com/pre-commit/mirrors-isort
-    rev: v5.9.2
+    rev: v5.9.3
     hooks:
       - id: isort
 
   # python code formatting - will amend files
   - repo: https://github.com/ambv/black
-    rev: 21.7b0
+    rev: 21.9b0
     hooks:
       - id: black
 
   # update syntax where appropriate
   - repo: https://github.com/asottile/pyupgrade
-    rev: v2.23.0
+    rev: v2.26.0
     hooks:
       - id: pyupgrade
 

@@ -4,7 +4,8 @@ import logging
 from typing import Callable
 
 from django.conf import settings
-from django.core.exceptions import MiddlewareNotUsed
+from django.core.exceptions import MiddlewareNotUsed, ValidationError
+from django.http import HttpResponseBadRequest
 from django.http.request import HttpRequest
 from django.http.response import HttpResponse
 
@@ -36,6 +37,11 @@ class VisitorRequestMiddleware:
         except InvalidVisitorPass as ex:
             logger.debug("Invalid access request: %s", ex)
             return self.get_response(request)
+        except ValidationError as ex:
+            logger.debug("Invalid UUID: %s", ex)
+            return HttpResponseBadRequest(
+                "Invalid visitor token - please check and try again."
+            )
         else:
             request.visitor = visitor
             request.user.is_visitor = True

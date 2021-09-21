@@ -17,15 +17,15 @@
                 in the details below.
             </p>
             {% if DEBUG %}
-            <p>
-                Running in DEBUG mode this demo does not send out email notifications once the
-                visitor pass is created, but will instead display a success page. In production you
-                should handle the `self_service_visitor_created` signal to send out the email.
-            </p>
-            <p>
-                NB in production the visitor pass will be emailed to you, as we require confirmation
-                that you are the owner of the email address.
-            </p>
+                <p>
+                    Running in DEBUG mode this demo does not send out email notifications once the
+                    visitor pass is created, but will instead display a success page. In production you
+                    should handle the `self_service_visitor_created` signal to send out the email.
+                </p>
+                <p>
+                    NB in production the visitor pass will be emailed to you, as we require confirmation
+                    that you are the owner of the email address.
+                </p>
             {% endif %}
             <form action="." method="post">
                 {% csrf_token %} {{ form }}
