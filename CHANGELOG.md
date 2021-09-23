@@ -2,6 +2,9 @@
 
 All notable changes to this project will be documented in this file.
 
+## v0.5
+
+* Return `HttpReponseBadRequest` (400) on malformed UUID token, h/t @chrisapplegate, issue #7
 ## v0.4
 
 * Add support for self-service tokens
