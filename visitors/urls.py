@@ -7,12 +7,12 @@ app_name = "visitors"
 urlpatterns = [
     path(
         "self-service/<uuid:visitor_uuid>/",
-        views.SelfService.as_view(),
+        views.SelfServiceRequest.as_view(),
         name="self-service",
     ),
     path(
         "self-service/<uuid:visitor_uuid>/success/",
-        views.self_service_success,
+        views.SelfServiceSuccess.as_view(),
         name="self-service-success",
     ),
 ]
