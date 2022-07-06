@@ -4,6 +4,7 @@
 .coverage
 .tox
 .venv
+demo.db
 node_modules
 poetry.lock
 test.db

@@ -1,4 +1,6 @@
 [run]
+branch = true
 omit =
-    visitors/migrations/*.py
+    tests/*
+    */migrations/*.py
     .venv/*

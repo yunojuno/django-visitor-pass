@@ -12,7 +12,7 @@ from django.utils.timezone import now as tz_now
 
 from visitors.exceptions import InvalidVisitorPass
 from visitors.models import Visitor
-from visitors.views import SelfService
+from visitors.views import SelfServiceRequest
 
 
 @pytest.mark.django_db
@@ -42,14 +42,14 @@ class TestSelfService:
         if has_expired:
             visitor.expires_at = tz_now() - timedelta(seconds=1)
         visitor.save()
-        view = SelfService()
+        view = SelfServiceRequest()
         assert visitor.has_expired == has_expired
         assert visitor.is_active == is_active
         if error:
             with pytest.raises(error):
-                view.get(request, visitor.uuid)
+                view.dispatch(request, visitor.uuid)
         else:
-            resp = view.get(request, visitor.uuid)
+            resp = view.dispatch(request, visitor.uuid)
             assert resp.status_code == mock_render.return_value.status_code
             mock_render.assert_called_once_with(
                 request,
@@ -57,11 +57,33 @@ class TestSelfService:
                 context={"visitor": visitor, "form": mock.ANY},
             )
 
+    @mock.patch.object(SelfServiceRequest, "get_template_name")
+    @mock.patch("visitors.views.render")
+    def test_template_override(
+        self,
+        mock_render,
+        mock_template_name,
+        rf: RequestFactory,
+        visitor: Visitor,
+    ) -> None:
+        request = rf.get("/")
+        request.visitor = visitor
+        visitor.is_active = False
+        visitor.save()
+        view = SelfServiceRequest(visitor=visitor)
+        _ = view.dispatch(request, visitor.uuid)
+        mock_template_name.assert_called_once_with()
+        mock_render.assert_called_once_with(
+            request,
+            template_name=mock_template_name.return_value,
+            context={"visitor": visitor, "form": mock.ANY},
+        )
+
     def test_post_404(self, rf: RequestFactory) -> None:
         request = rf.post("/")
-        view = SelfService()
+        view = SelfServiceRequest()
         with pytest.raises(Http404):
-            view.post(request, visitor_uuid=uuid4())
+            view.dispatch(request, visitor_uuid=uuid4())
 
     def test_post_valid(self, rf: RequestFactory, temp_visitor: Visitor) -> None:
         assert not temp_visitor.is_active
@@ -75,8 +97,8 @@ class TestSelfService:
             },
         )
         request.visitor = temp_visitor
-        view = SelfService()
-        resp = view.post(request, visitor_uuid=temp_visitor.uuid)
+        view = SelfServiceRequest()
+        resp = view.dispatch(request, visitor_uuid=temp_visitor.uuid)
         assert resp.status_code == 302
         temp_visitor.refresh_from_db()
         assert temp_visitor.is_active
@@ -87,3 +109,19 @@ class TestSelfService:
             "visitors:self-service-success",
             kwargs={"visitor_uuid": temp_visitor.uuid},
         )
+
+    def test_post_invalid(self, rf: RequestFactory, temp_visitor: Visitor) -> None:
+        assert not temp_visitor.is_active
+        request = rf.post(
+            "/",
+            {
+                "vuid": temp_visitor.uuid,
+                "first_name": "Henry",
+                "last_name": "Root",
+                "email": "henry",
+            },
+        )
+        request.visitor = temp_visitor
+        view = SelfServiceRequest()
+        resp = view.dispatch(request, visitor_uuid=temp_visitor.uuid)
+        assert resp.status_code == 200

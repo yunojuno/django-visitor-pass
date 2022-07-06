@@ -2,6 +2,10 @@
 
 Django app for managing temporary session-based users.
 
+### Support
+
+This project currently supports Python 3.8+, Django 3.1+.
+
 ### Background
 
 This package has been extracted out of `django-request-token` as a specific use
@@ -87,7 +91,7 @@ objects. The user has a boolean `user.is_visitor` property, and the request has
 a `request.visitor` property which is the relevant `Visitor` object.
 
 This is done via two bits of middleware, `VisitorRequestMiddleware` and
-`VisitSessionMiddleware`. 
+`VisitSessionMiddleware`.
 
 #### `VisitorRequestMiddleware`
 
@@ -104,7 +108,7 @@ if it can't access `request.visitor`). It has two responsibilities:
 
 1. If the request object has a visitor object on it, then it _must_ have been
    set by the request middleware on the current request - so it's a new visitor,
-   and we immediately stash it in the `request.session`. 
+   and we immediately stash it in the `request.session`.
 
 1. If `request.visitor` is None, then we don't have a _new_ visitor, but there
    may be one already stashed in the `request.session`, in which case we want to
