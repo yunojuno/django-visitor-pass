@@ -12,7 +12,11 @@ from django.utils.timezone import now as tz_now
 from django.utils.translation import gettext_lazy as _lazy
 
 from .exceptions import InvalidVisitorPass
-from .settings import VISITOR_QUERYSTRING_KEY, VISITOR_TOKEN_EXPIRY
+from .settings import (
+    VISITOR_QUERYSTRING_KEY,
+    VISITOR_SESSION_EXPIRY,
+    VISITOR_TOKEN_EXPIRY,
+)
 
 
 class VisitorManager(models.Manager):
@@ -59,6 +63,10 @@ class Visitor(models.Model):
         help_text=_lazy(
             "Set to False to disable the visitor link and prevent further access."
         ),
+    )
+    session_expiry = models.PositiveIntegerField(
+        default=VISITOR_SESSION_EXPIRY,
+        help_text=_lazy("Time in seconds after which visitor session should expire."),
     )
 
     objects = VisitorManager()
