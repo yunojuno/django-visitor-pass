@@ -2,6 +2,10 @@
 
 All notable changes to this project will be documented in this file.
 
+## v0.7
+
+* Add support for per-token session expiry (#9)
+
 ## v0.5
 
 * Return `HttpReponseBadRequest` (400) on malformed UUID token, h/t @chrisapplegate, issue #7

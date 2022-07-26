@@ -128,8 +128,13 @@ completely separate passes.
 
 #### Environment Settings
 
-* `VISITOR_SESSION_KEY`: session key used to stash visitor info (defaut:
+* `VISITOR_SESSION_KEY`: session key used to stash visitor info (default:
   `visitor:session`)
+
+* `VISITOR_SESSION_EXPIRY`: session expiry in seconds (default: 0 - meaning
+    that it will expire when the browser is closed.) This settings applies
+    as the default for all new visitor objects, but can be overridden on a
+    per-object basis.
 
 * `VISITOR_QUERYSTRING_KEY`: querystring param used on tokenised links (default:
   `vuid`)
