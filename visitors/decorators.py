@@ -12,6 +12,7 @@ from django.utils.translation import gettext as _
 
 from .exceptions import VisitorAccessDenied
 from .models import Visitor, VisitorLog
+from .settings import VISITOR_SESSION_EXPIRY
 
 logger = logging.getLogger(__name__)
 
@@ -56,6 +57,7 @@ def user_is_visitor(  # noqa: C901
     bypass_func: BypassFunc | None = None,
     log_visit: bool = True,
     self_service: bool = False,
+    self_service_session_expiry: int | None = VISITOR_SESSION_EXPIRY,
 ) -> Callable:
     """
     Decorate view functions that supports Visitor access.
@@ -87,6 +89,7 @@ def user_is_visitor(  # noqa: C901
             bypass_func=bypass_func,
             log_visit=log_visit,
             self_service=self_service,
+            self_service_session_expiry=self_service_session_expiry,
         )
 
     @functools.wraps(view_func)
@@ -109,7 +112,11 @@ def user_is_visitor(  # noqa: C901
 
         if not is_valid_request(request, scope):
             if self_service:
-                return redirect_to_self_service(request, scope)
+                return redirect_to_self_service(
+                    request,
+                    scope,
+                    self_service_session_expiry,
+                )
             raise VisitorAccessDenied(_("Visitor access denied"), scope)
 
         response = view_func(*args, **kwargs)
@@ -129,13 +136,19 @@ def is_valid_request(request: HttpRequest, scope: str) -> bool:
     return request.visitor.scope == scope
 
 
-def redirect_to_self_service(request: HttpRequest, scope: str) -> HttpResponseRedirect:
+def redirect_to_self_service(
+    request: HttpRequest,
+    scope: str,
+    session_expiry: int | None = VISITOR_SESSION_EXPIRY,
+) -> HttpResponseRedirect:
     """Create inactive Visitor token and redirect to enable self-service."""
     # create an inactive token for the time being. This will be used by
     # the auto-enroll view. The user fills in their name and email, which
     # overwrites the blank values here, and sets the token to be active.
     visitor = Visitor.objects.create_temp_visitor(
-        scope=scope, redirect_to=request.get_full_path()
+        scope=scope,
+        redirect_to=request.get_full_path(),
+        session_expiry=session_expiry,
     )
     return HttpResponseRedirect(
         reverse(

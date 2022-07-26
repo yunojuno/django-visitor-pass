@@ -41,7 +41,6 @@ TEMPLATES = [
                 "django.contrib.messages.context_processors.messages",
                 "django.contrib.auth.context_processors.auth",
                 "django.template.context_processors.request",
-                "visitors.context_processors.visitor",
             ]
         },
     }

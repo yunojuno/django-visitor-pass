@@ -20,13 +20,19 @@ from .settings import (
 
 
 class VisitorManager(models.Manager):
-    def create_temp_visitor(self, scope: str, redirect_to: str) -> Visitor:
+    def create_temp_visitor(
+        self,
+        scope: str,
+        redirect_to: str,
+        session_expiry: int | None = VISITOR_SESSION_EXPIRY,
+    ) -> Visitor:
         """Create empty Visitor object for self-service."""
         return self.create(
             email=Visitor.DEFAULT_SELF_SERVICE_EMAIL,
             scope=scope,
             is_active=False,
             context={"self-service": True, "redirect_to": redirect_to},
+            session_expiry=session_expiry,
         )
 
 

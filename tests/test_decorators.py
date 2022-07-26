@@ -114,7 +114,7 @@ class TestDecorators:
     def test_self_service_redirect(self):
         request = self._request(visitor=None)
 
-        @user_is_visitor(scope="foo", self_service=True)
+        @user_is_visitor(scope="foo", self_service=True, self_service_session_expiry=66)
         def view(request: HttpRequest) -> HttpResponse:
             return HttpResponse("OK")
 
@@ -126,3 +126,4 @@ class TestDecorators:
         assert response.url == reverse(
             "visitors:self-service", kwargs={"visitor_uuid": visitor.uuid}
         )
+        assert visitor.session_expiry == 66

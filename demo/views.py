@@ -18,7 +18,7 @@ def foo(request: HttpRequest) -> HttpResponse:
 
 
 # Test view that supports self-service
-@user_is_visitor(scope="bar", self_service=True)
+@user_is_visitor(scope="bar", self_service=True, self_service_session_expiry=60)
 def bar(request: HttpRequest) -> HttpResponse:
     return render(request, template_name="bar.html")
 

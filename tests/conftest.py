@@ -11,7 +11,10 @@ def visitor() -> Visitor:
 
 @pytest.fixture
 def temp_visitor() -> Visitor:
-    return Visitor.objects.create_temp_visitor(scope="foo", redirect_to="/foo")
+    return Visitor.objects.create_temp_visitor(
+        scope="foo",
+        redirect_to="/foo",
+    )
 
 
 @pytest.fixture
