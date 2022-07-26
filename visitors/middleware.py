@@ -104,4 +104,12 @@ class VisitorDebugMiddleware:
         logger.debug("request.user.is_visitor: %s", request.user.is_visitor)
         if request.user.is_visitor:
             logger.debug("request.visitor: %s", request.visitor)
+            logger.debug(
+                "request.visitor.session_expiry: %s",
+                request.visitor.session_expiry,
+            )
+            logger.debug(
+                "request.session.get_expiry_date: %s",
+                request.session.get_expiry_date(),
+            )
         return self.get_response(request)

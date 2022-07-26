@@ -62,6 +62,7 @@ class VisitorsAdmin(admin.ModelAdmin):
         "_context",
         "is_active",
         "expires_at",
+        "session_expiry",
     )
     search_fields = (
         "first_name",
