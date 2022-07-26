@@ -124,3 +124,12 @@ class TestVisitorSessionMiddleware(TestVisitorMiddlewareBase):
         assert not request.user.is_visitor
         assert not request.visitor
         assert not request.session.get(VISITOR_SESSION_KEY)
+
+    def test_visitor_session_expiry(self, visitor: Visitor) -> None:
+        """Check that request.visitor.session_expiry is set from visitor."""
+        visitor.session_expiry = 327  # something memorable
+        visitor.save()
+        request = self.request("/", is_visitor=True, visitor=visitor)
+        middleware = VisitorSessionMiddleware(lambda r: r)
+        middleware(request)
+        assert request.session.expiry == 327
