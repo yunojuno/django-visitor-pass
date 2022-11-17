@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## v0.9
+
+* Drop support for Django 3.1
+* Add support for Django 4.1
+* Add support for Python 3.11
+
 ## v0.7
 
 * Add support for per-token session expiry (#9)

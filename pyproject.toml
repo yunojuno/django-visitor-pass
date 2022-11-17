@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "django-visitor-pass"
-version = "0.8"
+version = "0.9"
 description = "Django app for managing temporary session-based users."
 license = "MIT"
 authors = ["YunoJuno <code@yunojuno.com>"]
@@ -13,21 +13,22 @@ classifiers = [
     "Development Status :: 4 - Beta",
     "Environment :: Web Environment",
     "Framework :: Django",
-    "Framework :: Django :: 3.1",
     "Framework :: Django :: 3.2",
     "Framework :: Django :: 4.0",
+    "Framework :: Django :: 4.1",
     "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
     "Programming Language :: Python :: 3 :: Only",
     "Programming Language :: Python :: 3.8",
     "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
 ]
 packages = [{ include = "visitors" }]
 
 [tool.poetry.dependencies]
 python = "^3.8"
-django = "^3.1 || ^4.0"
+django = "^3.2 || ^4.0"
 
 [tool.poetry.dev-dependencies]
 pytest = "*"
@@ -41,7 +42,7 @@ flake8-docstrings = "*"
 isort = "*"
 mypy = "*"
 pre-commit = "*"
-black = {version = "*", allow-prereleases = true}
+black = "*"
 freezegun = "*"
 tox = "*"
 
