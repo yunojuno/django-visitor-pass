@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## v1.0
+
+* Add support for Django 5.0
+* Add support for Python 3.11, 3.12
+* Drop support for Django 3.1
+* Replace isort, flake8 with ruff
+
 ## v0.7
 
 * Add support for per-token session expiry (#9)

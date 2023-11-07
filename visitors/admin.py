@@ -5,7 +5,7 @@ import json
 from django.contrib import admin, messages
 from django.db.models.query import QuerySet
 from django.http.request import HttpRequest
-from django.utils.safestring import mark_safe
+from django.utils.html import format_html
 
 from .models import Visitor, VisitorLog
 
@@ -16,7 +16,7 @@ def pretty_print(data: dict | None) -> str:
         return ""
     pretty = json.dumps(data, sort_keys=True, indent=4, separators=(",", ": "))
     html = pretty.replace(" ", "&nbsp;").replace("\n", "<br>")
-    return mark_safe("<pre><code>%s</code></pre>" % html)
+    return format_html("<pre><code>%s</code></pre>", html)
 
 
 @admin.register(Visitor)
