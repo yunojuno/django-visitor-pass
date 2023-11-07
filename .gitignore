@@ -1,11 +1,13 @@
-*.pyc
-*.egg-info
-*.bak
 .coverage
 .tox
 .venv
+.vscode
+*.bak
+*.egg-info
+*.pyc
 demo.db
+dist
+htmlcov
 node_modules
 poetry.lock
 test.db
-htmlcov
