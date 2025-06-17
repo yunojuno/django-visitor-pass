@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file.
 
+## v1.1
+
+* Add support for Django 5.2
+* Add support for Python 3.13
+* Drop support for Django versions before 4.2
+* Drop support for Python 3.8 and 3.9
+* Update ruff commands to use modern syntax
+* Update GitHub Actions to only test Django main branch with Python 3.12 and 3.13
+* Drop `black` in favor for `ruff`
+
 ## v1.0
 
 * Add support for Django 5.0
