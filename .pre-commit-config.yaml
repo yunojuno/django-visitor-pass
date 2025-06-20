@@ -1,20 +1,21 @@
 repos:
   # python code formatting - will amend files
-  - repo: https://github.com/ambv/black
-    rev: 23.10.1
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: "v0.11.13"
     hooks:
-      - id: black
+      - id: ruff-format
+        args: [format]
 
-  - repo: https://github.com/charliermarsh/ruff-pre-commit
+  - repo: https://github.com/astral-sh/ruff-pre-commit
     # Ruff version.
-    rev: "v0.1.4"
+    rev: "v0.11.13"
     hooks:
       - id: ruff
         args: [--fix, --exit-non-zero-on-fix]
 
   # python static type checking
   - repo: https://github.com/pre-commit/mirrors-mypy
-    rev: v1.6.1
+    rev: v1.16.0
     hooks:
       - id: mypy
         args:
