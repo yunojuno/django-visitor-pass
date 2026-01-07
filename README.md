@@ -4,7 +4,7 @@ Django app for managing temporary session-based users.
 
 ### Support
 
-This project currently supports Python 3.10+, Django 4.2+.
+This project currently supports Python 3.12+ and Django 5.2-6.0.
 
 ### Background
 
